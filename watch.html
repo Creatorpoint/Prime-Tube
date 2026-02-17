@@ -4,7 +4,7 @@
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-fetch("YOUR_API_URL/video/" + id)
+fetch("AIzaSyA1lPbSHa_z8U3GXEjHXwkzlZwq_VE_z6o/video/" + id)
 .then(res => res.json())
 .then(video => {
   document.getElementById("videoPlayer").src = video.url;
