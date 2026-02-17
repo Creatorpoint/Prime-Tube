@@ -1,0 +1,12 @@
+<video id="videoPlayer" controls width="100%"></video>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+fetch("YOUR_API_URL/video/" + id)
+.then(res => res.json())
+.then(video => {
+  document.getElementById("videoPlayer").src = video.url;
+});
+</script>
