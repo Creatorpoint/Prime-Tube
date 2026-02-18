@@ -18,7 +18,6 @@ background:var(--bg);
 color:var(--text);
 }
 
-/* HEADER */
 header{
 background:#111;
 padding:10px;
@@ -61,7 +60,6 @@ background:#0088cc;
 box-shadow:0 0 10px #00c3ff;
 }
 
-/* LOGIN FULL SCREEN */
 #loginSection{
 height:100vh;
 display:flex;
@@ -75,7 +73,6 @@ gap:10px;
 width:250px;
 }
 
-/* VIDEO GRID */
 #videos{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
@@ -99,7 +96,6 @@ padding:8px;
 font-size:14px;
 }
 
-/* FULLSCREEN MODAL */
 #videoModal{
 position:fixed;
 top:0;
@@ -118,21 +114,29 @@ width:90%;
 height:60%;
 }
 
-/* MOBILE MODE */
 .mobile #videos{
 grid-template-columns:1fr;
 }
 
-/* LIGHT MODE */
 .light{
 --bg:#f2f2f2;
 --card:#ffffff;
 --text:#000;
 }
 
+.premium-banner{
+background:gold;
+color:black;
+text-align:center;
+padding:6px;
+font-weight:bold;
+}
+
 </style>
 </head>
 <body>
+
+<div id="premiumContainer"></div>
 
 <!-- LOGIN -->
 <div id="loginSection">
@@ -169,7 +173,6 @@ grid-template-columns:1fr;
 
 </div>
 
-<!-- VIDEO MODAL -->
 <div id="videoModal" onclick="closeModal()">
 <iframe id="modalFrame" allowfullscreen></iframe>
 </div>
@@ -178,6 +181,7 @@ grid-template-columns:1fr;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
@@ -190,19 +194,48 @@ appId: "1:427524700832:web:3b6a0b8f843514c9bee7c5"
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-signupBtn.onclick=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
+/* SIGNUP WITH FIRESTORE SAVE */
+signupBtn.onclick=async()=>{
+const cred=await createUserWithEmailAndPassword(auth,email.value,password.value);
+await setDoc(doc(db,"users",cred.user.uid),{
+email:cred.user.email,
+premium:false
+});
+};
+
 loginBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,password.value);
 logoutBtn.onclick=()=>signOut(auth);
 
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth,async user=>{
 if(user){
+
 loginSection.style.display="none";
 mainContent.style.display="block";
+
+/* PREMIUM CHECK */
+const userRef=doc(db,"users",user.uid);
+const userSnap=await getDoc(userRef);
+
+if(userSnap.exists() && userSnap.data().premium===true){
+premiumContainer.innerHTML="<div class='premium-banner'>💎 PREMIUM MEMBER</div>";
+}
+
+/* BROADCAST LISTENER */
+const broadcastRef=doc(db,"system","broadcast");
+onSnapshot(broadcastRef,(snap)=>{
+if(snap.exists() && snap.data().message){
+alert("📢 "+snap.data().message);
+}
+});
+
 loadDefaultVideos();
+
 }else{
 loginSection.style.display="flex";
 mainContent.style.display="none";
+premiumContainer.innerHTML="";
 }
 });
 
@@ -216,9 +249,12 @@ searchVideos("Hindi trending songs 2026");
 window.searchVideos=async function(q){
 q=q||searchInput.value;
 if(!q) return;
+
 const res=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${q}&key=${API_KEY}`);
 const data=await res.json();
+
 videos.innerHTML="";
+
 data.items.forEach(item=>{
 videos.innerHTML+=`
 <div class="video-card" onclick="openVideo('${item.id.videoId}')">
