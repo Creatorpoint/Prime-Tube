@@ -1,137 +1,239 @@
 <!DOCTYPE html>
-<html>
+<html lang="hi">
 <head>
-<title>Prime Tube</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Tube</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
---bg:#0f0f0f;
---card:#1f1f1f;
---text:#fff;
+  --bg:#0f0f0f;
+  --card:#1f1f1f;
+  --text:#fff;
+  --primary:#0088cc;
+  --secondary:#00c3ff;
 }
 
 body{
-margin:0;
-font-family:Arial, sans-serif;
-background:var(--bg);
-color:var(--text);
+  margin:0;
+  font-family:'Roboto',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  transition:0.3s;
 }
 
+/* LIGHT THEME */
+body.light{
+  --bg:#f2f2f2;
+  --card:#fff;
+  --text:#000;
+}
+
+/* HEADER */
 header{
-background:#111;
-padding:10px;
-display:flex;
-flex-wrap:wrap;
-align-items:center;
-justify-content:space-between;
-gap:8px;
+  background:#111;
+  padding:12px 20px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
 
 header h2{
-margin:0;
-font-size:18px;
+  margin:0;
+  font-size:22px;
+  font-weight:700;
+  color:var(--primary);
 }
 
 .controls{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
 }
 
-input{
-padding:8px;
-border-radius:4px;
-border:none;
+.controls input{
+  padding:8px 10px;
+  border-radius:6px;
+  border:none;
+  outline:none;
+  width:180px;
 }
 
-button{
-padding:8px 12px;
-border:none;
-border-radius:4px;
-cursor:pointer;
-background:red;
-color:white;
-font-size:12px;
+.controls button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:500;
+  font-size:13px;
+  transition:0.3s;
 }
 
-.glow{
-background:#0088cc;
-box-shadow:0 0 10px #00c3ff;
+button.glow{
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 0 8px var(--secondary);
 }
 
+button:hover{
+  opacity:0.85;
+}
+
+/* LOGIN */
 #loginSection{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-gap:10px;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  gap:12px;
+  padding:10px;
+}
+
+#loginSection h2{
+  font-size:28px;
+  color:var(--primary);
 }
 
 #loginSection input{
-width:250px;
+  width:260px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  font-size:14px;
 }
 
+#loginSection button{
+  width:260px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:500;
+  border-radius:8px;
+  padding:10px;
+}
+
+/* PREMIUM BANNER */
+.premium-banner{
+  background:gold;
+  color:black;
+  text-align:center;
+  padding:6px;
+  font-weight:bold;
+  font-size:14px;
+}
+
+/* VIDEOS GRID */
 #videos{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-gap:15px;
-padding:15px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:15px;
+  padding:15px;
 }
 
 .video-card{
-background:var(--card);
-border-radius:8px;
-overflow:hidden;
-cursor:pointer;
+  background:var(--card);
+  border-radius:10px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.video-card:hover{
+  transform:scale(1.03);
 }
 
 .video-card img{
-width:100%;
+  width:100%;
+  display:block;
 }
 
 .video-card p{
-padding:8px;
-font-size:14px;
+  padding:10px;
+  font-size:14px;
+  font-weight:500;
+  line-height:1.3;
 }
 
+/* VIDEO MODAL */
 #videoModal{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.9);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:1000;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
 }
 
 #videoModal iframe{
-width:90%;
-height:60%;
+  width:90%;
+  height:60%;
+  border:none;
+  border-radius:8px;
 }
 
-.mobile #videos{
-grid-template-columns:1fr;
+/* RESPONSIVE */
+@media(max-width:768px){
+  #videos{
+    grid-template-columns:1fr;
+  }
+  .controls input{
+    width:140px;
+  }
+  #loginSection input, #loginSection button{
+    width:220px;
+  }
 }
 
-.light{
---bg:#f2f2f2;
---card:#ffffff;
---text:#000;
+@media(max-width:480px){
+  header h2{
+    font-size:20px;
+  }
+  .controls{
+    gap:5px;
+  }
+  .controls input{
+    width:100px;
+  }
+  #loginSection input, #loginSection button{
+    width:180px;
+  }
 }
 
-.premium-banner{
-background:gold;
-color:black;
-text-align:center;
-padding:6px;
-font-weight:bold;
+/* TOAST MESSAGE */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--secondary);
+  z-index: 9999;
+  font-weight: bold;
+  animation: fadein 0.5s, fadeout 0.5s 4.5s;
 }
 
+@keyframes fadein {
+  from {opacity:0; transform: translateY(20px);}
+  to {opacity:1; transform: translateY(0);}
+}
+
+@keyframes fadeout {
+  from {opacity:1; transform: translateY(0);}
+  to {opacity:0; transform: translateY(20px);}
+}
 </style>
 </head>
 <body>
@@ -147,32 +249,26 @@ font-weight:bold;
 <button id="loginBtn">Login</button>
 </div>
 
-<!-- MAIN -->
+<!-- MAIN CONTENT -->
 <div id="mainContent" style="display:none;">
 
 <header>
 <h2>Prime Tube</h2>
-
 <div class="controls">
 <a href="https://t.me/PRIME_X_CHAT2" target="_blank">
 <button class="glow">Join Prime X</button>
 </a>
-
-<input type="text" id="searchInput" placeholder="Search...">
+<input type="text" id="searchInput" placeholder="Search videos...">
 <button onclick="searchVideos()">Search</button>
-
-<button onclick="setMobile()">Mobile</button>
-<button onclick="setDesktop()">Desktop</button>
 <button onclick="toggleTheme()">Light/Dark</button>
-
 <button id="logoutBtn">Logout</button>
 </div>
 </header>
 
 <div id="videos"></div>
-
 </div>
 
+<!-- VIDEO MODAL -->
 <div id="videoModal" onclick="closeModal()">
 <iframe id="modalFrame" allowfullscreen></iframe>
 </div>
@@ -183,6 +279,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
 apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
 authDomain: "prime-tube-65695.firebaseapp.com",
@@ -196,40 +293,52 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* SIGNUP WITH FIRESTORE SAVE */
+/* SIGNUP AND LOGIN */
 signupBtn.onclick=async()=>{
+try{
 const cred=await createUserWithEmailAndPassword(auth,email.value,password.value);
-await setDoc(doc(db,"users",cred.user.uid),{
-email:cred.user.email,
-premium:false
-});
+await setDoc(doc(db,"users",cred.user.uid),{email:cred.user.email,premium:false});
+alert("✅ Signup successful!");
+}catch(e){alert("❌ "+e.message);}
 };
 
-loginBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,password.value);
+loginBtn.onclick=async()=>{
+try{
+await signInWithEmailAndPassword(auth,email.value,password.value);
+}catch(e){alert("❌ "+e.message);}
+};
+
 logoutBtn.onclick=()=>signOut(auth);
 
+/* AUTH STATE */
 onAuthStateChanged(auth,async user=>{
 if(user){
-
 loginSection.style.display="none";
 mainContent.style.display="block";
 
 /* PREMIUM CHECK */
 const userRef=doc(db,"users",user.uid);
 const userSnap=await getDoc(userRef);
-
 if(userSnap.exists() && userSnap.data().premium===true){
 premiumContainer.innerHTML="<div class='premium-banner'>💎 PREMIUM MEMBER</div>";
+}else{
+premiumContainer.innerHTML="";
 }
 
 /* BROADCAST LISTENER */
+let lastMessage="";
 const broadcastRef=doc(db,"system","broadcast");
 onSnapshot(broadcastRef,(snap)=>{
-if(snap.exists() && snap.data().message){
-alert("📢 "+snap.data().message);
+if(snap.exists()){
+const msg=snap.data().message;
+if(msg && msg!==lastMessage){
+lastMessage=msg;
+showBroadcast(msg);
+}
 }
 });
 
+/* LOAD DEFAULT VIDEOS */
 loadDefaultVideos();
 
 }else{
@@ -243,18 +352,28 @@ premiumContainer.innerHTML="";
 const API_KEY="AIzaSyB7XGItFXkRNsc_X6zmz8UnF5UyIkhL9cw";
 
 async function loadDefaultVideos(){
-searchVideos("Hindi trending songs 2026");
+const queries = [
+"Hindi songs",
+"Bollywood latest songs",
+"Top Hindi hits 2026",
+"Indian music mix",
+"Hindi trending songs"
+];
+const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+searchVideos(randomQuery);
 }
 
 window.searchVideos=async function(q){
 q=q||searchInput.value;
 if(!q) return;
-
-const res=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${q}&key=${API_KEY}`);
+try{
+const res=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(q)}&regionCode=IN&key=${API_KEY}`);
 const data=await res.json();
-
 videos.innerHTML="";
-
+if(!data.items || data.items.length===0){
+videos.innerHTML="<p style='color:red;text-align:center;'>कोई वीडियो नहीं मिला</p>";
+return;
+}
 data.items.forEach(item=>{
 videos.innerHTML+=`
 <div class="video-card" onclick="openVideo('${item.id.videoId}')">
@@ -263,8 +382,13 @@ videos.innerHTML+=`
 </div>
 `;
 });
+}catch(e){
+videos.innerHTML="<p style='color:red;text-align:center;'>वीडियो लोड करने में त्रुटि</p>";
+console.error(e);
+}
 };
 
+/* VIDEO MODAL */
 window.openVideo=function(id){
 videoModal.style.display="flex";
 modalFrame.src=`https://www.youtube.com/embed/${id}?autoplay=1`;
@@ -275,17 +399,19 @@ videoModal.style.display="none";
 modalFrame.src="";
 };
 
-window.setMobile=function(){
-document.body.classList.add("mobile");
-};
-
-window.setDesktop=function(){
-document.body.classList.remove("mobile");
-};
-
+/* THEME TOGGLE */
 window.toggleTheme=function(){
 document.body.classList.toggle("light");
 };
+
+/* BROADCAST TOAST */
+function showBroadcast(msg){
+const toast=document.createElement("div");
+toast.className="toast";
+toast.innerText="📢 "+msg;
+document.body.appendChild(toast);
+setTimeout(()=>{ toast.remove(); },5000);
+}
 
 </script>
 </body>
