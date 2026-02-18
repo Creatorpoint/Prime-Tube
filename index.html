@@ -13,8 +13,8 @@
     }
 
     header {
-      background: #202020;
-      padding: 15px;
+      background: linear-gradient(90deg,#1f1f1f,#2a2a2a);
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -23,15 +23,22 @@
     input {
       padding: 8px;
       width: 220px;
-      margin-right: 5px;
+      border-radius: 4px;
+      border: none;
     }
 
     button {
-      padding: 8px 12px;
+      padding: 8px 15px;
       background: red;
       border: none;
       color: white;
       cursor: pointer;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+
+    button:hover {
+      opacity: 0.8;
     }
 
     #videos {
@@ -45,27 +52,61 @@
       background: #1f1f1f;
       padding: 10px;
       border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .video-card:hover {
+      transform: scale(1.03);
     }
 
     iframe {
       width: 100%;
       height: 200px;
+      border-radius: 8px;
     }
 
     #loginSection {
       text-align: center;
-      margin-top: 100px;
+      margin-top: 120px;
     }
 
     #mainContent {
       display: none;
     }
+
+    /* Welcome Section */
+    #welcomeBox {
+      padding: 15px 20px;
+      background: #181818;
+      font-size: 14px;
+      border-bottom: 1px solid #333;
+    }
+
+    /* Glowing Button */
+    .glow-btn {
+      display: inline-block;
+      padding: 10px 18px;
+      margin-top: 10px;
+      color: white;
+      text-decoration: none;
+      border-radius: 30px;
+      background: #0088cc;
+      box-shadow: 0 0 10px #0088cc, 0 0 20px #0088cc;
+      transition: 0.3s;
+      font-weight: bold;
+    }
+
+    .glow-btn:hover {
+      box-shadow: 0 0 20px #00ccff, 0 0 40px #00ccff;
+      transform: scale(1.05);
+    }
+
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN SECTION -->
+<!-- LOGIN -->
 <div id="loginSection">
   <h2>Prime Tube Login</h2>
   <input type="email" id="email" placeholder="Email"><br><br>
@@ -74,7 +115,7 @@
   <button id="loginBtn">Login</button>
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN -->
 <div id="mainContent">
 
   <header>
@@ -85,6 +126,9 @@
       <button id="logoutBtn">Logout</button>
     </div>
   </header>
+
+  <!-- Welcome Box -->
+  <div id="welcomeBox"></div>
 
   <div id="videos"></div>
 
@@ -101,7 +145,7 @@ import {
   signOut 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-/* 🔥 PASTE YOUR FIREBASE API KEY BELOW */
+/* 🔥 YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
   authDomain: "prime-tube-65695.firebaseapp.com",
@@ -116,36 +160,35 @@ const auth = getAuth(app);
 
 const loginSection = document.getElementById("loginSection");
 const mainContent = document.getElementById("mainContent");
+const welcomeBox = document.getElementById("welcomeBox");
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-
-document.getElementById("signupBtn").addEventListener("click", async () => {
+document.getElementById("signupBtn").onclick = async () => {
   try {
-    await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+    await createUserWithEmailAndPassword(auth, email.value, password.value);
     alert("Signup Successful");
   } catch (error) {
     alert(error.message);
   }
-});
+};
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
+document.getElementById("loginBtn").onclick = async () => {
   try {
-    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    alert("Login Successful");
+    await signInWithEmailAndPassword(auth, email.value, password.value);
   } catch (error) {
     alert(error.message);
   }
-});
+};
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
+document.getElementById("logoutBtn").onclick = async () => {
   await signOut(auth);
-});
+};
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
     loginSection.style.display = "none";
     mainContent.style.display = "block";
+    showWelcome(user.email);
+    loadDefaultVideos();
   } else {
     loginSection.style.display = "block";
     mainContent.style.display = "none";
@@ -153,43 +196,51 @@ onAuthStateChanged(auth, (user) => {
 });
 
 
-/* 🔥 PASTE YOUR YOUTUBE API KEY BELOW */
+/* 🔥 YOUTUBE API */
 const YOUTUBE_API_KEY = "AIzaSyB7XGItFXkRNsc_X6zmz8UnF5UyIkhL9cw";
 
-window.searchVideos = async function () {
-  const query = document.getElementById("searchInput").value;
+async function loadDefaultVideos() {
+  searchVideos("trending music");
+}
 
-  if (!query) {
-    alert("Enter something to search");
-    return;
-  }
+window.searchVideos = async function (customQuery) {
 
-  try {
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${query}&type=video&key=${YOUTUBE_API_KEY}`
-    );
+  const query = customQuery || document.getElementById("searchInput").value;
+  if (!query) return;
 
-    const data = await response.json();
-    const videosDiv = document.getElementById("videos");
-    videosDiv.innerHTML = "";
+  const response = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${query}&type=video&key=${YOUTUBE_API_KEY}`
+  );
 
-    data.items.forEach(item => {
-      const videoId = item.id.videoId;
-      const title = item.snippet.title;
+  const data = await response.json();
+  const videosDiv = document.getElementById("videos");
+  videosDiv.innerHTML = "";
 
-      videosDiv.innerHTML += `
-        <div class="video-card">
-          <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
-          <p>${title}</p>
-        </div>
-      `;
-    });
+  data.items.forEach(item => {
+    const videoId = item.id.videoId;
+    const title = item.snippet.title;
 
-  } catch (error) {
-    alert("YouTube API Error");
-    console.error(error);
-  }
+    videosDiv.innerHTML += `
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
+        <p>${title}</p>
+      </div>
+    `;
+  });
 };
+
+
+/* 🔥 PROFESSIONAL WELCOME */
+function showWelcome(email) {
+  welcomeBox.innerHTML = `
+    👋 Welcome back, <b>${email}</b><br>
+    Enjoy unlimited streaming on <b>Prime Tube</b> 🚀
+    <br>
+    <a href="https://t.me/PRIME_X_CHAT2" target="_blank" class="glow-btn">
+      🔥 Join PRIME X Community
+    </a>
+  `;
+}
 
 </script>
 
