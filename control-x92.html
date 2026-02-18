@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Prime Tube Pro Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
+color:white;
+}
+
+header{
+padding:20px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+background:#111;
+letter-spacing:1px;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:#1e1e1e;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+box-shadow:0 0 20px rgba(255,0,0,0.3);
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+border:none;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:8px;
+background:linear-gradient(90deg,#ff0000,#ff4d4d);
+color:white;
+cursor:pointer;
+font-weight:bold;
+}
+
+.stat{
+font-size:18px;
+margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<header>🔥 PRIME TUBE PRO ADMIN</header>
+
+<div class="container">
+
+<div class="card">
+<h3>🔔 Broadcast Message</h3>
+<textarea id="broadcastMsg" placeholder="Enter broadcast message"></textarea>
+<button onclick="sendBroadcast()">Send Broadcast</button>
+<button onclick="clearBroadcast()">Clear Message</button>
+</div>
+
+<div class="card">
+<h3>💎 Premium Subscription</h3>
+<input type="email" id="premiumEmail" placeholder="Enter user email">
+<button onclick="makePremium()">Make Premium</button>
+<button onclick="removePremium()">Remove Premium</button>
+</div>
+
+<div class="card">
+<h3>📊 Statistics</h3>
+<p>Total Users: <span id="userCount">Loading...</span></p>
+<p>Premium Users: <span id="premiumCount">Loading...</span></p>
+</div>
+
+<div class="card">
+<button onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
+authDomain: "prime-tube-65695.firebaseapp.com",
+projectId: "prime-tube-65695",
+storageBucket: "prime-tube-65695.firebasestorage.app",
+messagingSenderId: "427524700832",
+appId: "1:427524700832:web:3b6a0b8f843514c9bee7c5"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_EMAIL="pk4030794@gmail.com";
+
+onAuthStateChanged(auth, async(user)=>{
+if(!user || user.email!==ADMIN_EMAIL){
+alert("Access Denied");
+window.location.href="index.html";
+}else{
+loadStats();
+}
+});
+
+window.logout=function(){
+signOut(auth).then(()=>window.location.href="index.html");
+};
+
+/* BROADCAST */
+window.sendBroadcast=async function(){
+const msg=document.getElementById("broadcastMsg").value;
+await setDoc(doc(db,"system","broadcast"),{
+message:msg,
+time:Date.now()
+});
+alert("Broadcast Sent 🔥");
+};
+
+window.clearBroadcast=async function(){
+await setDoc(doc(db,"system","broadcast"),{
+message:"",
+time:Date.now()
+});
+alert("Broadcast Cleared");
+};
+
+/* PREMIUM SYSTEM */
+window.makePremium=async function(){
+const email=document.getElementById("premiumEmail").value;
+
+const snap=await getDocs(collection(db,"users"));
+snap.forEach(async(docu)=>{
+if(docu.data().email===email){
+await updateDoc(doc(db,"users",docu.id),{
+premium:true
+});
+}
+});
+alert("User Upgraded to Premium 💎");
+loadStats();
+};
+
+window.removePremium=async function(){
+const email=document.getElementById("premiumEmail").value;
+
+const snap=await getDocs(collection(db,"users"));
+snap.forEach(async(docu)=>{
+if(docu.data().email===email){
+await updateDoc(doc(db,"users",docu.id),{
+premium:false
+});
+}
+});
+alert("Premium Removed");
+loadStats();
+};
+
+/* STATS */
+async function loadStats(){
+const snap=await getDocs(collection(db,"users"));
+let total=snap.size;
+let premium=0;
+snap.forEach(d=>{
+if(d.data().premium===true) premium++;
+});
+document.getElementById("userCount").innerText=total;
+document.getElementById("premiumCount").innerText=premium;
+}
+
+</script>
+</body>
+</html>
