@@ -2,23 +2,108 @@
 <html>
 <head>
   <title>Prime Tube</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f9f9f9;
+      text-align: center;
+    }
+
+    h1 {
+      background: red;
+      color: white;
+      padding: 15px;
+    }
+
+    input {
+      width: 60%;
+      padding: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: red;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .video-card {
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    iframe {
+      margin-top: 20px;
+      width: 80%;
+      height: 400px;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">Prime <span>Tube</span></div>
-  <input type="text" id="search" placeholder="Search videos...">
-  <div class="user-actions">
-    <a href="upload.html">Upload</a>
-    <a href="login.html">Login</a>
-  </div>
-</header>
+<h1>Prime Tube</h1>
 
-<section class="video-grid" id="videoContainer">
-</section>
+<input type="text" id="searchInput" placeholder="Search videos...">
+<button onclick="searchVideos()">Search</button>
 
-<script src="js/app.js"></script>
+<div id="player"></div>
+
+<div class="videos" id="videos"></div>
+
+<script>
+const API_KEY = "AIzaSyCiCksAxzEehRvZWVGjOpJu9Ncznw8mUXU";
+
+function searchVideos() {
+  const query = document.getElementById("searchInput").value;
+
+  fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${query}&key=${API_KEY}`)
+    .then(res => res.json())
+    .then(data => {
+      const videosDiv = document.getElementById("videos");
+      videosDiv.innerHTML = "";
+
+      data.items.forEach(item => {
+        const videoId = item.id.videoId;
+        const title = item.snippet.title;
+        const thumbnail = item.snippet.thumbnails.medium.url;
+
+        videosDiv.innerHTML += `
+          <div class="video-card" onclick="playVideo('${videoId}')">
+            <img src="${thumbnail}">
+            <p>${title}</p>
+          </div>
+        `;
+      });
+    });
+}
+
+function playVideo(videoId) {
+  document.getElementById("player").innerHTML = `
+    <iframe src="https://www.youtube.com/embed/${videoId}" 
+      frameborder="0" 
+      allowfullscreen>
+    </iframe>
+  `;
+}
+</script>
+
 </body>
 </html>
