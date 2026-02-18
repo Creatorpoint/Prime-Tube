@@ -1,109 +1,325 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Prime Tube</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f9f9f9;
-      text-align: center;
-    }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime Stream Ultimate</title>
+<link rel="manifest" href="manifest.json">
 
-    h1 {
-      background: red;
-      color: white;
-      padding: 15px;
-    }
-
-    input {
-      width: 60%;
-      padding: 10px;
-      margin-top: 20px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background: red;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    .videos {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
-      padding: 20px;
-    }
-
-    .video-card {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      cursor: pointer;
-    }
-
-    img {
-      width: 100%;
-      border-radius: 8px;
-    }
-
-    iframe {
-      margin-top: 20px;
-      width: 80%;
-      height: 400px;
-    }
-  </style>
+<style>
+body{margin:0;font-family:Arial;background:#0d0d0d;color:white}
+header{padding:15px;background:#111;display:flex;justify-content:space-between;align-items:center}
+button{padding:6px 10px;border:none;background:red;color:white;border-radius:5px;cursor:pointer}
+input{padding:6px;margin:5px}
+.container{padding:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px}
+.card{background:#1a1a1a;border-radius:10px;padding:10px}
+.card img,.card video{width:100%;height:150px;object-fit:cover}
+.modal{display:none;position:fixed;inset:0;background:black;justify-content:center;align-items:center;flex-direction:column;z-index:999}
+</style>
 </head>
 
 <body>
 
-<h1>Prime Tube</h1>
+<header>
+<h3>Prime Stream Ultimate</h3>
+<div>
+<button onclick="openProfile()">Profile</button>
+<button onclick="logout()">Logout</button>
+</div>
+</header>
 
-<input type="text" id="searchInput" placeholder="Search videos...">
-<button onclick="searchVideos()">Search</button>
+<div class="container">
 
+<!-- AUTH -->
+<div id="authBox">
+<h3>Login / Signup</h3>
+<input type="email" id="email" placeholder="Email"><br>
+<input type="password" id="password" placeholder="Password"><br>
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+</div>
+
+<div id="appBox" style="display:none">
+
+<!-- YOUTUBE SECTION -->
+<h3>YouTube Search</h3>
+<input type="text" id="ytSearch" placeholder="Search YouTube">
+<button onclick="searchYouTube()">Search</button>
+<button onclick="loadTrending()">Trending</button>
+<div class="grid" id="ytResults"></div>
+
+<hr>
+
+<!-- UPLOAD SECTION -->
+<h3>Upload Your Video</h3>
+<input type="file" id="videoFile" accept="video/*">
+<input type="text" id="videoTitle" placeholder="Video title">
+<button onclick="uploadVideo()">Upload</button>
+
+<h3>Your Platform Videos</h3>
+<div class="grid" id="videoGrid"></div>
+
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none">
+<h3>Admin Ads Panel</h3>
+<input type="text" id="adMessage" placeholder="Ad message">
+<input type="text" id="adLink" placeholder="Ad link">
+<button onclick="saveAd()">Save Ad</button>
+</div>
+
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="modal" id="playerModal">
 <div id="player"></div>
+<button onclick="closePlayer()">Close</button>
+</div>
 
-<div class="videos" id="videos"></div>
+<!-- PROFILE -->
+<div class="modal" id="profileModal">
+<div style="background:#111;padding:20px">
+<h3>User Profile</h3>
+<p id="profileEmail"></p>
+<button onclick="closeProfile()">Close</button>
+</div>
+</div>
+
+<!-- COMMENTS -->
+<div class="modal" id="commentModal">
+<div style="background:#111;padding:20px;width:90%;height:80%;overflow:auto">
+<div id="commentList"></div>
+<input type="text" id="commentText" placeholder="Write comment">
+<button onclick="sendComment()">Send</button>
+<button onclick="closeComments()">Close</button>
+</div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
 
 <script>
-const API_KEY = "AIzaSyCiCksAxzEehRvZWVGjOpJu9Ncznw8mUXU";
 
-function searchVideos() {
-  const query = document.getElementById("searchInput").value;
+/* ================== CONFIG ================== */
 
-  fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${query}&key=${API_KEY}`)
-    .then(res => res.json())
-    .then(data => {
-      const videosDiv = document.getElementById("videos");
-      videosDiv.innerHTML = "";
+// 🔴 YOUTUBE API KEY
+const YT_API_KEY = "AIzaSyB7XGItFXkRNsc_X6zmz8UnF5UyIkhL9cw";
 
-      data.items.forEach(item => {
-        const videoId = item.id.videoId;
-        const title = item.snippet.title;
-        const thumbnail = item.snippet.thumbnails.medium.url;
+// 🔴 FIREBASE CONFIG
+const firebaseConfig = {
+apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
+authDomain: "prime-tube-65695.firebaseapp.com",
+projectId: "prime-tube-65695",
+storageBucket: "prime-tube-65695.firebasestorage.app",
+appId: "1:427524700832:web:3b6a0b8f843514c9bee7c5"
+};
 
-        videosDiv.innerHTML += `
-          <div class="video-card" onclick="playVideo('${videoId}')">
-            <img src="${thumbnail}">
-            <p>${title}</p>
-          </div>
-        `;
-      });
-    });
+firebase.initializeApp(firebaseConfig);
+
+const auth=firebase.auth();
+const db=firebase.firestore();
+const storage=firebase.storage();
+
+/* ================== AUTH ================== */
+
+auth.onAuthStateChanged(user=>{
+if(user){
+authBox.style.display="none";
+appBox.style.display="block";
+loadVideos();
+checkAdmin();
+}else{
+authBox.style.display="block";
+appBox.style.display="none";
+}
+});
+
+function signup(){
+auth.createUserWithEmailAndPassword(email.value,password.value)
+.then(res=>{
+db.collection("users").doc(res.user.uid).set({
+email:email.value,
+role:"user"
+});
+});
 }
 
-function playVideo(videoId) {
-  document.getElementById("player").innerHTML = `
-    <iframe src="https://www.youtube.com/embed/${videoId}" 
-      frameborder="0" 
-      allowfullscreen>
-    </iframe>
-  `;
+function login(){
+auth.signInWithEmailAndPassword(email.value,password.value);
 }
+
+function logout(){auth.signOut();}
+
+/* ================== YOUTUBE ================== */
+
+function searchYouTube(){
+const query=ytSearch.value;
+
+fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${query}&key=${YT_API_KEY}`)
+.then(res=>res.json())
+.then(data=>displayYT(data.items));
+}
+
+function loadTrending(){
+fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=IN&maxResults=12&key=${YT_API_KEY}`)
+.then(res=>res.json())
+.then(data=>displayYT(data.items));
+}
+
+function displayYT(items){
+ytResults.innerHTML="";
+items.forEach(v=>{
+const id=v.id.videoId||v.id;
+ytResults.innerHTML+=`
+<div class="card">
+<img src="${v.snippet.thumbnails.medium.url}">
+<p>${v.snippet.title}</p>
+<button onclick="playYT('${id}')">Play</button>
+</div>
+`;
+});
+}
+
+function playYT(id){
+player.innerHTML=`<iframe width="90%" height="70%"
+src="https://www.youtube.com/embed/${id}?autoplay=1"
+frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+playerModal.style.display="flex";
+}
+
+/* ================== UPLOAD ================== */
+
+function uploadVideo(){
+const file=videoFile.files[0];
+const title=videoTitle.value;
+if(!file)return alert("Select file");
+
+const ref=storage.ref("videos/"+Date.now());
+ref.put(file).then(()=>{
+ref.getDownloadURL().then(url=>{
+db.collection("videos").add({
+title:title,
+url:url,
+likes:0,
+owner:auth.currentUser.uid,
+createdAt:new Date()
+});
+});
+});
+}
+
+/* ================== LOAD VIDEOS ================== */
+
+function loadVideos(){
+db.collection("videos").orderBy("createdAt","desc")
+.onSnapshot(snap=>{
+videoGrid.innerHTML="";
+snap.forEach(doc=>{
+const d=doc.data();
+videoGrid.innerHTML+=`
+<div class="card">
+<video src="${d.url}" onclick="playOwn('${d.url}')"></video>
+<p>${d.title}</p>
+<button onclick="likeVideo('${doc.id}')">❤️ ${d.likes||0}</button>
+<button onclick="openComments('${doc.id}')">💬</button>
+</div>
+`;
+});
+});
+}
+
+function playOwn(url){
+player.innerHTML=`<video src="${url}" controls autoplay style="width:90%;height:70%"></video>`;
+playerModal.style.display="flex";
+}
+
+/* ================== LIKE ================== */
+
+function likeVideo(id){
+db.collection("videos").doc(id)
+.update({likes:firebase.firestore.FieldValue.increment(1)});
+}
+
+/* ================== COMMENTS ================== */
+
+let currentVideoId=null;
+
+function openComments(id){
+currentVideoId=id;
+commentModal.style.display="flex";
+db.collection("videos").doc(id)
+.collection("comments")
+.orderBy("createdAt","desc")
+.onSnapshot(snap=>{
+commentList.innerHTML="";
+snap.forEach(doc=>{
+commentList.innerHTML+=`<p>${doc.data().text}</p>`;
+});
+});
+}
+
+function sendComment(){
+db.collection("videos").doc(currentVideoId)
+.collection("comments")
+.add({text:commentText.value,createdAt:new Date()});
+commentText.value="";
+}
+
+function closeComments(){commentModal.style.display="none"}
+
+/* ================== PROFILE ================== */
+
+function openProfile(){
+profileEmail.innerText=auth.currentUser.email;
+profileModal.style.display="flex";
+}
+
+function closeProfile(){profileModal.style.display="none"}
+
+/* ================== ADMIN ADS ================== */
+
+function checkAdmin(){
+db.collection("users").doc(auth.currentUser.uid)
+.get().then(doc=>{
+if(doc.data().role==="admin"){
+adminPanel.style.display="block";
+}
+});
+}
+
+function saveAd(){
+db.collection("ads").doc("active").set({
+message:adMessage.value,
+link:adLink.value,
+enabled:true
+});
+}
+
+db.collection("ads").doc("active")
+.onSnapshot(doc=>{
+if(doc.exists && doc.data().enabled){
+alert(doc.data().message);
+window.open(doc.data().link,"_blank");
+}
+});
+
+/* ================== PLAYER CLOSE ================== */
+
+function closePlayer(){
+playerModal.style.display="none";
+player.innerHTML="";
+}
+
+/* ================== PWA ================== */
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+
 </script>
-
 </body>
 </html>
