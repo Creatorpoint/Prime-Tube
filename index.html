@@ -5,111 +5,147 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{
+  --bg:#0f0f0f;
+  --card:#1c1c1c;
+  --text:white;
+  --accent:#ff0000;
+}
+
 body{
   margin:0;
   font-family:Arial;
-  background:#0f0f0f;
-  color:white;
+  background:var(--bg);
+  color:var(--text);
+  transition:0.3s;
+}
+
+/* Light Mode */
+.light-mode{
+  --bg:#f4f4f4;
+  --card:white;
+  --text:black;
 }
 
 /* Header */
 header{
-  background:#1f1f1f;
-  padding:15px 20px;
+  background:var(--card);
+  padding:12px;
   display:flex;
+  flex-wrap:wrap;
   justify-content:space-between;
   align-items:center;
+  gap:8px;
+}
+
+.header-controls{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
 }
 
 input{
   padding:8px;
   border:none;
-  border-radius:4px;
+  border-radius:6px;
 }
 
 button{
-  padding:8px 15px;
-  background:red;
+  padding:8px 12px;
   border:none;
-  color:white;
-  border-radius:4px;
+  border-radius:6px;
   cursor:pointer;
+  background:var(--accent);
+  color:white;
 }
 
+.mode-btn{
+  background:#007bff;
+}
+
+/* Video Grid */
 #videos{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
   gap:15px;
-  padding:20px;
+  padding:15px;
+}
+
+/* Desktop Mode */
+.desktop-mode #videos{
+  grid-template-columns:repeat(4,1fr);
+}
+
+/* Mobile Mode */
+.mobile-mode #videos{
+  grid-template-columns:repeat(1,1fr);
 }
 
 .video-card{
-  background:#1f1f1f;
-  padding:10px;
-  border-radius:8px;
+  background:var(--card);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,0.4);
+  cursor:pointer;
 }
 
-iframe{
+.video-card img{
   width:100%;
-  height:200px;
-  border-radius:8px;
 }
 
+.video-card p{
+  padding:8px;
+  font-size:14px;
+}
+
+/* Modal */
+#videoModal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:9999;
+}
+
+#videoModal iframe{
+  width:90%;
+  height:60%;
+  border-radius:10px;
+}
+
+.close-btn{
+  margin-top:15px;
+  background:red;
+}
+
+/* Welcome Popup */
+#welcomePopup{
+  position:fixed;
+  top:15px;
+  right:15px;
+  background:#111;
+  padding:12px 18px;
+  border-radius:8px;
+  box-shadow:0 0 15px #00ffcc;
+  display:none;
+  z-index:9999;
+}
+
+/* Login */
 #loginSection{
   text-align:center;
   margin-top:120px;
 }
 
-#welcomeBox{
-  padding:15px 20px;
-  background:#181818;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
-.profile-img{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid #00ffcc;
-}
-
-.avatar-small{
-  width:35px;
-  height:35px;
-  border-radius:50%;
-  object-fit:cover;
-  cursor:pointer;
-}
-
-.glow-btn{
-  display:inline-block;
-  padding:8px 15px;
-  background:#0088cc;
-  border-radius:20px;
-  text-decoration:none;
-  color:white;
-  box-shadow:0 0 10px #0088cc;
-}
-
-#welcomePopup{
-  position:fixed;
-  top:20px;
-  right:20px;
-  background:#111;
-  padding:15px 20px;
-  border-radius:10px;
-  box-shadow:0 0 20px #00ffcc;
-  display:none;
-  z-index:9999;
-}
-
 </style>
 </head>
 
-<body>
+<body class="desktop-mode">
 
 <div id="loginSection">
   <h2>Prime Tube Login</h2>
@@ -123,18 +159,25 @@ iframe{
 
 <header>
   <h2>Prime Tube</h2>
-  <div>
+  <div class="header-controls">
     <input type="text" id="searchInput" placeholder="Search...">
     <button onclick="searchVideos()">Search</button>
-    <img id="headerAvatar" class="avatar-small">
+    <button class="mode-btn" onclick="setMobileMode()">Mobile Mode</button>
+    <button class="mode-btn" onclick="setDesktopMode()">Desktop Mode</button>
+    <button onclick="toggleMode()">Light/Dark</button>
     <button id="logoutBtn">Logout</button>
   </div>
 </header>
 
 <div id="welcomePopup"></div>
-<div id="welcomeBox"></div>
 <div id="videos"></div>
 
+</div>
+
+<!-- Video Modal -->
+<div id="videoModal">
+  <iframe id="modalIframe" allowfullscreen></iframe>
+  <button class="close-btn" onclick="closeModal()">Close</button>
 </div>
 
 <script type="module">
@@ -145,16 +188,8 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   onAuthStateChanged, 
-  signOut,
-  updateProfile
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJ5A3fVLjRCRtO4nyphy7j7NtgEKWYAd8",
@@ -167,12 +202,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 const loginSection = document.getElementById("loginSection");
 const mainContent = document.getElementById("mainContent");
-const welcomeBox = document.getElementById("welcomeBox");
-const headerAvatar = document.getElementById("headerAvatar");
 const welcomePopup = document.getElementById("welcomePopup");
 const videos = document.getElementById("videos");
 
@@ -193,45 +225,41 @@ onAuthStateChanged(auth,(user)=>{
     loginSection.style.display="none";
     mainContent.style.display="block";
     showWelcome(user);
-    loadDefaultVideos();
+    loadRecommended();
   }else{
     loginSection.style.display="block";
     mainContent.style.display="none";
   }
 });
 
+/* Welcome */
 function showWelcome(user){
-
-  const photo = user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png";
-
-  headerAvatar.src = photo;
-
-  welcomeBox.innerHTML = `
-    <img src="${photo}" class="profile-img">
-    <div>
-      👋 Welcome back, <b>${user.email}</b><br>
-      <a href="https://t.me/PRIME_X_CHAT2" target="_blank" class="glow-btn">
-        🔥 Join PRIME X Community
-      </a>
-    </div>
-  `;
-
-  welcomePopup.innerHTML = `
-    👋 Welcome <b>${user.email}</b><br>
-    Enjoy unlimited streaming 🚀
-  `;
-
+  welcomePopup.innerHTML=`👋 Welcome ${user.email}`;
   welcomePopup.style.display="block";
-
-  setTimeout(()=>{
-    welcomePopup.style.display="none";
-  },4000);
+  setTimeout(()=>{welcomePopup.style.display="none";},4000);
 }
 
+/* Light/Dark */
+window.toggleMode=function(){
+  document.body.classList.toggle("light-mode");
+};
+
+/* View Modes */
+window.setMobileMode=function(){
+  document.body.classList.remove("desktop-mode");
+  document.body.classList.add("mobile-mode");
+};
+
+window.setDesktopMode=function(){
+  document.body.classList.remove("mobile-mode");
+  document.body.classList.add("desktop-mode");
+};
+
+/* YouTube */
 const YOUTUBE_API_KEY="AIzaSyB7XGItFXkRNsc_X6zmz8UnF5UyIkhL9cw";
 
-async function loadDefaultVideos(){
-  searchVideos("trending music");
+async function loadRecommended(){
+  searchVideos("trending hindi songs 2026");
 }
 
 window.searchVideos=async function(query){
@@ -239,30 +267,34 @@ window.searchVideos=async function(query){
   if(!query)return;
 
   const res=await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(query)}&regionCode=IN&key=${YOUTUBE_API_KEY}`
   );
 
   const data=await res.json();
   videos.innerHTML="";
 
-  if(!data.items){
-    videos.innerHTML="<p>API error or limit reached</p>";
-    return;
-  }
-
   data.items.forEach(item=>{
     if(!item.id.videoId) return;
 
     videos.innerHTML+=`
-      <div class="video-card">
-        <iframe 
-          src="https://www.youtube.com/embed/${item.id.videoId}"
-          allowfullscreen>
-        </iframe>
+      <div class="video-card" onclick="openModal('${item.id.videoId}')">
+        <img src="${item.snippet.thumbnails.medium.url}">
         <p>${item.snippet.title}</p>
       </div>
     `;
   });
+};
+
+/* Modal */
+window.openModal=function(videoId){
+  document.getElementById("videoModal").style.display="flex";
+  document.getElementById("modalIframe").src=
+    "https://www.youtube.com/embed/"+videoId+"?autoplay=1";
+};
+
+window.closeModal=function(){
+  document.getElementById("videoModal").style.display="none";
+  document.getElementById("modalIframe").src="";
 };
 
 </script>
